@@ -1,0 +1,10 @@
+:4173 {
+	root * /srv
+	header {
+		Content-Security-Policy "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; object-src 'none'"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+	}
+	try_files {path} /index.html
+	file_server
+}

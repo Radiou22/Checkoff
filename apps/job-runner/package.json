@@ -1,0 +1,27 @@
+{
+  "name": "@checkoff/job-runner",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "@checkoff/contracts": "workspace:*",
+    "@checkoff/infra": "workspace:*",
+    "zod": "^4.3.0",
+    "pg": "^8.16.0",
+    "bullmq": "^5.65.0",
+    "nodemailer": "^10.6.1"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.0",
+    "@checkoff/tsconfig": "workspace:*"
+  }
+}

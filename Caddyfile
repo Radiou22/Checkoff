@@ -1,0 +1,22 @@
+{
+	auto_https disable_redirects
+}
+
+https://{$CHECKOFF_DOMAIN:localhost} {
+	tls internal
+	@api path /api /api/* /health /docs /docs/*
+	handle @api {
+		reverse_proxy {
+			dynamic a api 8080 {
+				refresh 5s
+				versions ipv4
+			}
+			lb_policy round_robin
+			lb_try_duration 4s
+			fail_duration 10s
+		}
+	}
+	handle {
+		reverse_proxy front:4173
+	}
+}
