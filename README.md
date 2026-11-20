@@ -9,7 +9,7 @@ Le monorepo contient un front React, une API NestJS, un microservice NestJS de r
 La démonstration nécessite Node.js 24, PNPM 12.15 et Docker Compose.
 
 ```sh
-pnpm setup
+node scripts/setup.ts
 docker compose up --build --wait
 docker compose cp gateway:/data/caddy/pki/authorities/local/root.crt /tmp/checkoff-ca.crt
 curl --cacert /tmp/checkoff-ca.crt https://localhost:8443/health

@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const root = '/app/coverage-v8';
 const input = join(root, 'input');
@@ -18,8 +19,9 @@ for (const entry of await readdir(root, { withFileTypes: true })) {
 }
 
 if (!count) throw new Error('Aucun fichier de couverture V8 trouvé après l’arrêt des services.');
+const c8 = fileURLToPath(new URL('../node_modules/.bin/c8', import.meta.url));
 const result = spawnSync(
-  'c8',
+  c8,
   [
     'report',
     '--temp-directory',

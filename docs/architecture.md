@@ -48,9 +48,11 @@ Par défaut, `WORKER_MODE=both` active la publication et le traitement. Les vale
 
 ## Démo des réplicas et observabilité
 
-Après le démarrage décrit dans le [README](../README.md) :
+Après le démarrage décrit dans le [README](../README.md), installer les dépendances et compiler les contrats pour exécuter le client de test local :
 
 ```sh
+pnpm install --frozen-lockfile
+pnpm --filter @checkoff/contracts build
 docker compose ps
 NODE_EXTRA_CA_CERTS=/tmp/checkoff-ca.crt pnpm smoke
 docker compose logs job-runner
@@ -71,7 +73,7 @@ docker compose up --build --wait
 docker compose cp gateway:/data/caddy/pki/authorities/local/root.crt /tmp/checkoff-ca.crt
 NODE_EXTRA_CA_CERTS=/tmp/checkoff-ca.crt pnpm smoke
 docker compose stop api job-runner receipt
-docker compose run --rm --no-deps api pnpm coverage:backend
+docker compose run --rm --no-deps api node scripts/coverage-backend.ts
 mkdir -p coverage
 docker compose cp --index 1 api:/app/coverage-v8/report coverage/backend-e2e
 ```

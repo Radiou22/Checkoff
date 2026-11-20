@@ -14,9 +14,7 @@
     "format:check": "prettier --check .",
     "test": "pnpm -r test",
     "coverage": "pnpm -r coverage",
-    "smoke": "node --env-file-if-exists=.env scripts/smoke.ts",
-    "setup": "node scripts/setup.ts",
-    "coverage:backend": "node scripts/coverage-backend.ts"
+    "smoke": "node --env-file-if-exists=.env scripts/smoke.ts"
   },
   "devDependencies": {
     "@checkoff/eslint": "workspace:*",

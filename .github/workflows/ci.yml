@@ -58,7 +58,7 @@ jobs:
       - run: npm install --global pnpm@12.15.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @checkoff/contracts build
-      - run: pnpm setup
+      - run: node scripts/setup.ts
       - run: docker compose up --build --wait --wait-timeout 120
       - name: Démo HTTPS et plusieurs réplicas
         run: |
@@ -67,7 +67,7 @@ jobs:
       - name: Couverture d’intégration back-end
         run: |
           docker compose stop api job-runner receipt
-          docker compose run --rm --no-deps -e NODE_V8_COVERAGE= api pnpm coverage:backend
+          docker compose run --rm --no-deps -e NODE_V8_COVERAGE= api node scripts/coverage-backend.ts
           mkdir -p coverage
           docker compose cp --index 1 api:/app/coverage-v8/report coverage/backend-e2e
       - uses: actions/upload-artifact@v4
