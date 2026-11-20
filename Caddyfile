@@ -1,0 +1,8 @@
+{
+	auto_https disable_redirects
+}
+
+https://{$CHECKOFF_DOMAIN:localhost} {
+	tls internal
+	reverse_proxy checkout:8080
+}

@@ -1,0 +1,102 @@
+x-service: &service
+  image: checkoff-backend:local
+  pull_policy: never
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+    interval: 10s
+    timeout: 3s
+    start_period: 10s
+    retries: 3
+
+x-internal-environment: &internal-environment
+  CHECKOFF_INTERNAL_TOKEN: "${CHECKOFF_INTERNAL_TOKEN:?Définir CHECKOFF_INTERNAL_TOKEN dans .env}"
+
+services:
+  gateway:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CHECKOFF_DOMAIN: "${CHECKOFF_DOMAIN:-localhost}"
+    ports:
+      - "${CHECKOFF_BIND_ADDRESS:-127.0.0.1}:${CHECKOFF_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - gateway-data:/data
+    depends_on:
+      checkout:
+        condition: service_healthy
+  checkout:
+    <<: *service
+    build: .
+    command: ["checkout"]
+    environment:
+      <<: *internal-environment
+      ARTICLE_URL: http://article:8080
+      STOCK_URL: http://stock:8080
+      PAYMENT_URL: http://payment:8080
+      RECEIPT_URL: http://receipt:8080
+      USERS_URL: http://users:8080
+      CORS_ORIGIN: "${CORS_ORIGIN:-}"
+      TRUST_PROXY: "1"
+    volumes:
+      - checkout-data:/app/data
+    depends_on:
+      article:
+        condition: service_healthy
+      stock:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+      receipt:
+        condition: service_healthy
+      users:
+        condition: service_healthy
+  article:
+    <<: *service
+    command: ["article"]
+    environment: *internal-environment
+    volumes:
+      - article-data:/app/data
+  stock:
+    <<: *service
+    command: ["stock"]
+    environment: *internal-environment
+    volumes:
+      - stock-data:/app/data
+  payment:
+    <<: *service
+    command: ["payment"]
+    environment: *internal-environment
+    volumes:
+      - payment-data:/app/data
+  receipt:
+    <<: *service
+    command: ["receipt"]
+    environment:
+      <<: *internal-environment
+      STORE_NAME: "${STORE_NAME:-Checkoff}"
+      STORE_ADDRESS: "${STORE_ADDRESS:-}"
+      STORE_TAX_ID: "${STORE_TAX_ID:-}"
+      MAIL_FROM: "${MAIL_FROM:-}"
+      SMTP_URL: "${SMTP_URL:-}"
+    volumes:
+      - receipt-data:/app/data
+  users:
+    <<: *service
+    command: ["users"]
+    environment:
+      <<: *internal-environment
+      ADMIN_USERNAME: "${ADMIN_USERNAME:?Définir ADMIN_USERNAME dans .env}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Définir ADMIN_PASSWORD dans .env}"
+    volumes:
+      - users-data:/app/data
+
+volumes:
+  gateway-data:
+  checkout-data:
+  article-data:
+  stock-data:
+  payment-data:
+  receipt-data:
+  users-data:
