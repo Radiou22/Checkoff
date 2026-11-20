@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAgeExclude:
+  - nodemailer@10.6.1
+  - pdfkit@0.21.0
+allowBuilds:
+  '@scarf/scarf': false
+  esbuild: true
+  msgpackr-extract: false

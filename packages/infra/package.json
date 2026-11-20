@@ -1,0 +1,29 @@
+{
+  "name": "@checkoff/infra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@checkoff/contracts": "workspace:*"
+  },
+  "peerDependencies": {
+    "bullmq": "*",
+    "pg": "*"
+  },
+  "devDependencies": {
+    "@checkoff/tsconfig": "workspace:*",
+    "@types/pg": "^8.15.0",
+    "bullmq": "^5.65.0",
+    "pg": "^8.16.0"
+  }
+}

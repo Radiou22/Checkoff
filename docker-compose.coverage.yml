@@ -1,0 +1,28 @@
+x-coverage: &coverage
+  volumes:
+    - backend-coverage:/app/coverage-v8
+
+services:
+  api:
+    <<: *coverage
+    command:
+      ['sh', '-c', 'NODE_V8_COVERAGE=/app/coverage-v8/$$HOSTNAME exec node apps/api/dist/main.js']
+  receipt:
+    <<: *coverage
+    command:
+      [
+        'sh',
+        '-c',
+        'NODE_V8_COVERAGE=/app/coverage-v8/$$HOSTNAME exec node apps/receipt/dist/main.js',
+      ]
+  job-runner:
+    <<: *coverage
+    command:
+      [
+        'sh',
+        '-c',
+        'NODE_V8_COVERAGE=/app/coverage-v8/$$HOSTNAME exec node apps/job-runner/dist/main.js',
+      ]
+
+volumes:
+  backend-coverage:

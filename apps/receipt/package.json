@@ -1,0 +1,27 @@
+{
+  "name": "@checkoff/receipt",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "@checkoff/contracts": "workspace:*",
+    "@checkoff/infra": "workspace:*",
+    "zod": "^4.3.0",
+    "pg": "^8.16.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "pdfkit": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.17.0",
+    "@checkoff/tsconfig": "workspace:*"
+  }
+}

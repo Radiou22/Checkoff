@@ -1,0 +1,139 @@
+x-server: &server
+  image: checkoff-server:local
+  pull_policy: never
+  restart: unless-stopped
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgres://checkoff:${POSTGRES_PASSWORD:?Renseigner POSTGRES_PASSWORD}@postgres:5432/checkoff
+  REDIS_URL: redis://redis:6379
+  INTERNAL_TOKEN: '${INTERNAL_TOKEN:?Renseigner INTERNAL_TOKEN}'
+  RECEIPT_URL: http://receipt:8080
+
+x-backend-dependencies: &backend-dependencies
+  postgres:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+  receipt:
+    condition: service_healthy
+
+x-http-health: &http-health
+  test:
+    [
+      'CMD',
+      'node',
+      '-e',
+      "fetch('http://127.0.0.1:8080/health').then(r=>{if(!r.ok) process.exit(1)}).catch(()=>process.exit(1))",
+    ]
+  interval: 3s
+  timeout: 3s
+  start_period: 10s
+  retries: 10
+
+services:
+  gateway:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CHECKOFF_DOMAIN: '${CHECKOFF_DOMAIN:-localhost}'
+    ports:
+      - '${CHECKOFF_BIND_ADDRESS:-127.0.0.1}:${CHECKOFF_HTTPS_PORT:-8443}:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - gateway-data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+      front:
+        condition: service_healthy
+
+  front:
+    image: checkoff-front:local
+    build:
+      context: .
+      target: front
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:4173/']
+      interval: 3s
+      timeout: 3s
+      retries: 8
+
+  api:
+    <<: *server
+    build:
+      context: .
+      target: server
+    deploy:
+      replicas: 2
+    environment:
+      <<: *backend-env
+      TRUST_PROXY: '1'
+      JWT_SECRET: '${JWT_SECRET:?Renseigner JWT_SECRET}'
+      ADMIN_USERNAME: '${ADMIN_USERNAME:-admin}'
+      ADMIN_PASSWORD: '${ADMIN_PASSWORD:?Renseigner ADMIN_PASSWORD}'
+      STORE_NAME: '${STORE_NAME:-Checkoff}'
+      STORE_ADDRESS: '${STORE_ADDRESS:-}'
+      STORE_TAX_ID: '${STORE_TAX_ID:-}'
+    depends_on: *backend-dependencies
+    healthcheck: *http-health
+
+  receipt:
+    <<: *server
+    command: ['node', 'apps/receipt/dist/main.js']
+    environment:
+      INTERNAL_TOKEN: '${INTERNAL_TOKEN:?Renseigner INTERNAL_TOKEN}'
+    healthcheck: *http-health
+
+  job-runner:
+    <<: *server
+    command: ['node', 'apps/job-runner/dist/main.js']
+    deploy:
+      replicas: 2
+    environment:
+      <<: *backend-env
+      WORKER_MODE: '${WORKER_MODE:-both}'
+      WORKER_CONCURRENCY: '${WORKER_CONCURRENCY:-2}'
+      SMTP_URL: '${SMTP_URL:-smtp://mailpit:1025}'
+      SMTP_REQUIRE_TLS: '${SMTP_REQUIRE_TLS:-0}'
+      MAIL_FROM: '${MAIL_FROM:-checkoff@example.test}'
+    depends_on: *backend-dependencies
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: checkoff
+      POSTGRES_USER: checkoff
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:?Renseigner POSTGRES_PASSWORD}'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/db/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'checkoff', '-d', 'checkoff']
+      interval: 3s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 8
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${CHECKOFF_MAIL_PORT:-8025}:8025'
+
+volumes:
+  gateway-data:
+  postgres-data:
+  redis-data:
